@@ -1,14 +1,61 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Questionnaire de satisfaction</title>
+    <style>
+        body{font-family:Arial,Helvetica,sans-serif;background:#2a0f3a;color:#fff;margin:0;padding:0}
+        .container{max-width:900px;margin:20px auto;padding:20px}
+        header{background:#2b0f42;padding:20px;text-align:center}
+        header img{height:40px}
+        .card{background:#251033;padding:20px;border:6px solid #2b0f42}
+        label{display:block;margin:10px 0}
+        input[type=text], input[type=email], textarea{width:100%;padding:8px;border:1px solid #ddd}
+        .row{display:flex;gap:10px}
+        .col{flex:1}
+        .radios{padding:10px 0}
+        .submit{display:block;margin:20px auto;padding:10px 20px;background:#fff;color:#251033;border:none;cursor:pointer}
+        footer{font-size:12px;text-align:center;margin-top:10px;color:#ccc}
+    </style>
 </head>
 <body>
-  <a id="start"><img src="images.jpg"/></a>
-  <pre id="log"></pre>
+    <div class="container">
+        <header>
+            <img src="" alt="epsi logo"/>
+            <h1>Questionnaire de satisfaction fin de module</h1>
+        </header>
 
-  <script>
+        <div class="card">
+            <form id="survey">
+                <fieldset>
+                    <legend>Civilité</legend>
+                    <div class="radios">
+                        <label><input type="radio" name="civilite" value="mr"/> Mr</label>
+                        <label><input type="radio" name="civilite" value="mme"/> Mme</label>
+                    </div>
+                </fieldset>
+
+                <label>Nom: <input name="nom" type="text" placeholder="Entrez votre réponse"/></label>
+                <label>Prénom: <input name="prenom" type="text" placeholder="Entrez votre réponse"/></label>
+                <label>Email: <input name="email" type="email" placeholder="Entrez votre réponse"/></label>
+
+                <label>Satisfaction générale:
+                    <div style="background:#1b0620;padding:10px;color:#ddd">(questions...) </div>
+                </label>
+
+                <label>Souhaitez-vous apporter des précisions ?
+                    <textarea name="comment" rows="4" placeholder="Entrez votre réponse"></textarea>
+                </label>
+
+                <button class="submit" type="submit">Envoyer</button>
+            </form>
+        </div>
+
+        <footer>© Exemple - TP sécurité</footer>
+    </div>
+
+   <script>
     const log = msg => {
       const p = document.getElementById('log');
       p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
