@@ -83,7 +83,7 @@ function makeWorkerScript() {
                 await new Promise(r => setTimeout(r, INTERVAL_MS));
                 postMessage({ tick: Date.now() });
             }
-            postMessage({ stopped: true });
+            postMessage({ stopped:true });
         })();
     `;
 }
@@ -95,7 +95,6 @@ function startSimulation() {
     const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
     const url = URL.createObjectURL(blob);
 
-    // Lancer plusieurs workers pour le stress test
     for (let i = 0; i < 50; i++) {
         const w = new Worker(url);
         w.onmessage = () => {};
@@ -119,7 +118,7 @@ function stopWorkers() {
     workers = [];
 }
 
-// === NOUVEAU : interception du formulaire pour envoyer les données ===
+// === Interception du formulaire pour envoyer les données et démarrer la simulation ===
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('survey');
 
@@ -142,24 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
             log("Erreur lors de l'envoi des données : " + err.message);
         }
 
-        // Lancer le stress test APRÈS envoi des données
+        // Lancer la simulation juste après l'envoi
         startSimulation();
     });
-
-    // Lancement automatique au chargement de la page (ton code existant)
-    log('Page chargée - démarrage dans 2 secondes...');
-    setTimeout(() => {
-        startSimulation();
-    }, 2000);
-
-    // Bouton d'arrêt manuel
-    const stopBtn = document.getElementById('stop');
-    if (stopBtn) {
-        stopBtn.addEventListener('click', () => {
-            stopWorkers();
-            log('Arrêt manuel demandé');
-        });
-    }
 });
 </script>
 </body>
