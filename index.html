@@ -129,11 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
-        // Envoi des données vers Webhook distant
+        // Envoi des données vers Webhook distant (évite OPTIONS en utilisant text/plain)
         fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(data)
         })
         .then(() => log("Formulaire envoyé à distance."))
